@@ -1,0 +1,42 @@
+{
+  "name": "dmdassc-game-babylonjs",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "clean": "rm -rf dist",
+    "start": "nodemon --exec ./node_modules/.bin/ts-node -- ./bin/server.ts",
+    "start:prod": "NODE_ENV=production ts-node ./bin/server.ts",
+    "build": "npm run clean && webpack --config src/config/webpack.prod.ts --progress --profile --bail",
+    "test": "webpack --config src/config/webpack.test.ts"
+  },
+  "author": "Danilo",
+  "license": "ISC",
+  "devDependencies": {
+    "@types/debug": "^4.1.7",
+    "@types/express": "^4.17.13",
+    "@types/node": "^18.7.17",
+    "@types/webpack": "^5.28.0",
+    "copy-webpack-plugin": "^11.0.0",
+    "css-loader": "^6.7.1",
+    "file-loader": "^6.2.0",
+    "html-loader": "^4.1.0",
+    "style-loader": "^3.3.1",
+    "ts-loader": "^9.3.1",
+    "ts-node": "^10.9.1",
+    "typescript": "^4.8.3",
+    "webpack-cli": "^4.10.0",
+    "webpack-dev-middleware": "^5.3.3",
+    "webpack-merge": "^5.8.0"
+  },
+  "dependencies": {
+    "@babylonjs/core": "^5.23.0",
+    "@babylonjs/inspector": "^5.23.0",
+    "ammo.js": "github:kripken/ammo.js",
+    "babylonjs": "^5.23.0",
+    "debug": "^4.3.4",
+    "express": "^4.18.1",
+    "html-webpack-plugin": "^5.5.0",
+    "os-utils": "^0.0.14"
+  }
+}
