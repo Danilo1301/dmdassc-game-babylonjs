@@ -4,15 +4,18 @@
   "description": "",
   "main": "index.js",
   "scripts": {
+    "start": "ts-node -- ./bin/server.ts",
+    "dev": "nodemon --exec ./node_modules/.bin/ts-node -- ./bin/server.ts",
     "clean": "rm -rf dist",
-    "start": "nodemon --exec ./node_modules/.bin/ts-node -- ./bin/server.ts",
-    "start:prod": "NODE_ENV=production ts-node ./bin/server.ts",
     "build": "npm run clean && webpack --config src/config/webpack.prod.ts --progress --profile --bail",
+    "start:prod": "NODE_ENV=production ts-node ./bin/server.ts",
     "test": "webpack --config src/config/webpack.test.ts"
   },
   "author": "Danilo",
   "license": "ISC",
   "devDependencies": {
+    "@babylonjs/core": "^5.23.0",
+    "@babylonjs/loaders": "^5.23.0",
     "@types/debug": "^4.1.7",
     "@types/express": "^4.17.13",
     "@types/node": "^18.7.17",
@@ -30,13 +33,17 @@
     "webpack-merge": "^5.8.0"
   },
   "dependencies": {
-    "@babylonjs/core": "^5.23.0",
     "@babylonjs/inspector": "^5.23.0",
     "ammo.js": "github:kripken/ammo.js",
     "babylonjs": "^5.23.0",
+    "babylonjs-loaders": "^5.23.0",
     "debug": "^4.3.4",
     "express": "^4.18.1",
     "html-webpack-plugin": "^5.5.0",
-    "os-utils": "^0.0.14"
+    "os-utils": "^0.0.14",
+    "xhr2": "^0.2.1"
+  },
+  "engines": {
+    "node": "16.x"
   }
 }

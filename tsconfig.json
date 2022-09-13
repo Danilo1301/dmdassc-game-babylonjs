@@ -11,6 +11,10 @@
     ],
     "lib": ["dom", "es6"],
     "noImplicitAny": false,
-    "suppressImplicitAnyIndexErrors": true
-  }
+    "suppressImplicitAnyIndexErrors": true,
+    "types": [
+      "babylonjs",
+      "babylonjs-loaders",
+    ],
+  },
 }

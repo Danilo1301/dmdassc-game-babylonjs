@@ -1,8 +1,8 @@
 import * as express from "express";
 import * as http from 'http'
 import * as debug from "debug";
-import {devConfig} from "../config/webpack.dev";
-import {DIST} from "../config/paths";
+import { devConfig } from "../config/webpack.dev";
+import { DIST, PUBLIC } from "../config/paths";
 import { Game } from "../shared/game";
 
 const log = debug('app:server');
@@ -16,17 +16,23 @@ class Server {
     this.express = express();
     this.middleware();
 
-    this.runCPUTest();
+    //this.runCPUTest();
 
     const game = new Game(true);
+    game.start();
   }
 
   public listen(port: number) {
     this.server = http.createServer(this.express);
 
+    this.express.use('/', express.static(PUBLIC));
+
+    console.log(PUBLIC)
+
     this.server.listen(port, () => {
       log(`listening at http://localhost:${port}`);
     });
+
   }
 
   private middleware(): void {
@@ -48,9 +54,9 @@ class Server {
         publicPath: compiler.options.output.publicPath
       }));
 
-      this.express.use('/assets', express.static('src/client/assets'));
+      //this.express.use('/assets', express.static('src/client/assets'));
     } else {
-      this.express.use('/', express.static(DIST));
+      //this.express.use('/', express.static(DIST));
     }
   }
 

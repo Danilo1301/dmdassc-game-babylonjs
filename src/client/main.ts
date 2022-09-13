@@ -1,11 +1,10 @@
-import "../config/environment";
-import "./style.css";
+import "../config/environment"
+import "./style.css"
 
-import { Game } from "../shared/game";
+import { Game } from "../shared/game"
 
-
-window.addEventListener('DOMContentLoaded', () => {
-
+window.addEventListener('DOMContentLoaded', () =>
+{
   const game = new Game();
-
-});
+  game.start()
+})
