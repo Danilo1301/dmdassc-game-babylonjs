@@ -1,7 +1,7 @@
-import {join} from "path";
+import { join } from "path";
 
-export const ROOT = join(process.cwd());
-export const SRC = join(ROOT, 'src');
-export const DIST = join(ROOT, 'dist');
-export const CLIENT = join(SRC, 'client');
-export const PUBLIC = join(ROOT, 'public');
+export const PATH_ROOT = join(process.cwd());
+export const PATH_SRC = join(PATH_ROOT, 'src');
+export const PATH_PUBLIC = join(PATH_ROOT, 'public');
+export const PATH_BUILD = join(PATH_PUBLIC, 'game');
+//export const CLIENT = join(SRC, 'client');

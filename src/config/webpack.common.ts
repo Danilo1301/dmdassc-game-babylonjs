@@ -1,13 +1,9 @@
 import * as webpack from "webpack";
-import {CLIENT, SRC} from "./paths";
 import * as HtmlWebpackPlugin from "html-webpack-plugin";
+import { PATH_SRC, PATH_PUBLIC } from "./paths";
 
 export const commonConfig = {
-  entry: {
-    vendor: `${CLIENT}/vendor.ts`,
-    app: `${CLIENT}/main.ts`
-  },
-
+  entry: `${PATH_SRC}/client/main.ts`,
   resolve: {
     extensions: [".ts", ".js"],
     fallback: {
@@ -16,7 +12,6 @@ export const commonConfig = {
         'util': false
     }
   },
-
   module: {
     rules: [{
       test: /\.ts$/,
@@ -32,7 +27,6 @@ export const commonConfig = {
       use: ['style-loader', 'css-loader']
     }]
   },
-
   plugins: [
     /*
     new webpack.optimize.CommonsChunkPlugin({
@@ -48,7 +42,8 @@ export const commonConfig = {
       }
     }),
     new HtmlWebpackPlugin({
-      template: `${CLIENT}/index.html`
+      template: `${PATH_PUBLIC}/template.html`,
+      publicPath: process.env.NODE_ENV == "development" ? "" : "/game"
     })
   ]
-};
+}

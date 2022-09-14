@@ -14,13 +14,42 @@ import * as Ammo from 'ammo.js';
 
 const log = debug('app:game');
 
-class Player {
+function getRandomArbitrary(min, max) {
+    return Math.random() * (max - min) + min;
+}
+
+export class Ped {
     public box: BABYLON.Mesh
+    public input = {x: 0, y: 0}
+    public keys: {[key: number]: boolean} = {}
+    public speed: number = 3;
+    public controllable = false;
+    public networked = false;
 
     constructor(scene: Scene) {
-        let box = this.box = MeshBuilder.CreateBox("box", {}, scene);
-        box.physicsImpostor = new BABYLON.PhysicsImpostor(box, BABYLON.PhysicsImpostor.BoxImpostor, {mass: 1});
+        var material = new BABYLON.StandardMaterial("mat1", scene);
+        material.alpha = 1;
+        material.diffuseColor = new BABYLON.Color3(1.0, 0.2, 0.7);
 
+        let box = this.box = MeshBuilder.CreateBox("box", {}, scene);
+        box.material = material
+        box.physicsImpostor = new BABYLON.PhysicsImpostor(box, BABYLON.PhysicsImpostor.BoxImpostor, {mass: 1});
+        box.physicsImpostor.physicsBody.setAngularFactor(new Vector3(0,1,0));
+
+        scene.onKeyboardObservable.add((kbInfo) => {
+            switch (kbInfo.type) {
+              case BABYLON.KeyboardEventTypes.KEYDOWN:
+                console.log("KEY DOWN: ", kbInfo.event.inputIndex)
+                this.keys[kbInfo.event.inputIndex] = true
+                break;
+              case BABYLON.KeyboardEventTypes.KEYUP:
+                console.log("KEY UP: ", kbInfo.event.inputIndex);
+                this.keys[kbInfo.event.inputIndex] = false
+                break;
+            }
+        });
+
+        /*
         setInterval(() => {
             box.physicsImpostor.applyForce(new Vector3(2, 0, 0), new Vector3(0, 0, 0))
 
@@ -29,29 +58,95 @@ class Player {
                 box.physicsImpostor.setLinearVelocity(new Vector3())
                 box.physicsImpostor.setAngularVelocity(new Vector3())
             }
-
-            
         }, 500)
+        */
     }
 
     public setPosition(pos: Vector3) {
         this.box.position.set(pos.x, pos.y, pos.z);
     }
+
+    public update() {
+        if(this.controllable) {
+            this.input.x = (this.keys[65] ? 1 : 0) + (this.keys[68] ? -1 : 0)
+            this.input.y = (this.keys[83] ? 1 : 0) + (this.keys[87] ? -1 : 0)
+
+            if(this.keys[69]) {
+                this.box.physicsImpostor.applyForce(new Vector3(0, 20, 0), new Vector3())
+            }
+        }
+
+        if(!this.networked) {
+            this.box.physicsImpostor.setLinearVelocity(
+                new Vector3(
+                    this.input.x * this.speed,
+                    this.box.physicsImpostor.getLinearVelocity().y,
+                    this.input.y * this.speed
+                )
+            )
+        }
+
+       
+    }
+}
+
+class NPC extends Ped {
+    public targetPos: Vector3
+
+    constructor(scene: Scene) {
+        super(scene)
+
+        this.updateTargetPos()
+        setInterval(() => {
+            this.updateTargetPos()
+        }, Math.random()*5000+3000)
+    }
+
+    private updateTargetPos() {
+        this.targetPos = new Vector3(
+            getRandomArbitrary(-15, 20),
+            0,
+            getRandomArbitrary(-15, 20)
+        )
+    }
+
+    public update() {
+        
+        this.input.x = 0
+        this.input.y = 0
+        
+        if(this.targetPos.x < this.box.position.x) this.input.x = -1
+        if(this.targetPos.x > this.box.position.x) this.input.x = 1
+        if(this.targetPos.z < this.box.position.z) this.input.y = -1
+        if(this.targetPos.z > this.box.position.z) this.input.y = 1
+
+        //console.log(this.targetPos.x)
+        
+        super.update()
+    }
+
+}
+
+class Player extends Ped {
+
 }
 
 export class Game {
     public headless: boolean = false
     public scene: Scene;
-    public camera: Camera;
+    public camera: ArcRotateCamera;
     public physicsViewer: BABYLON.PhysicsViewer;
+    public player?: Player;
+
 
     public buildingContainerPrefab: BABYLON.AssetContainer;
 
+    public peds: Ped[] = []
+
     constructor(headless: boolean = false) {
         this.headless = headless
-
         if(headless) {
-            global.XMLHttpRequest = require('xhr2').XMLHttpRequest;
+            global.XMLHttpRequest = require('xhr2').XMLHttpRequest
         }
     }
     
@@ -62,8 +157,6 @@ export class Game {
         obj.physicsImpostor = new BABYLON.PhysicsImpostor(obj, BABYLON.PhysicsImpostor.MeshImpostor, { mass: 0 }, scene);
 
         /*
-        
-        
         // Create physics root and position it to be the center of mass for the imported mesh
         var physicsRoot = new BABYLON.Mesh("physicsRoot", scene);
         //physicsRoot.position.y -= 0.9;
@@ -104,33 +197,6 @@ export class Game {
         */
     }
 
-    public createChunk(x: number, y: number, z: number) {
-        const instance = this.buildingContainerPrefab.instantiateModelsToScene()
-        instance.rootNodes[0].position.set(x, y, z)
-        this.makePhysicsObject(instance.rootNodes[0], this.scene, 1)
-
-        const numNpcs = 8
-
-        console.log(`Creating ${numNpcs} npcs`)
-
-        for (let i = 0; i < 30; i++) {
-            const npc = new Player(this.scene)
-            npc.setPosition(new Vector3(x, y + 10, z))
-
-            if(x == 0 && y == 0 && z == 0 && i == 0) {
-                const box = npc.box
-                setInterval(() => {
-                    console.log(`${box.position.x}, ${box.position.y}, ${box.position.z}`)
-                }, 1000);
-            }
-        }
-
-        const ground = MeshBuilder.CreateGround("ground", {width: 30, height: 30}, this.scene)
-        ground.position.set(x, y, z)
-        ground.physicsImpostor = new BABYLON.PhysicsImpostor(ground, BABYLON.PhysicsImpostor.BoxImpostor, {mass: 0});
-
-    }
-
     public async start() {
         console.log("start")
 
@@ -143,18 +209,79 @@ export class Game {
             })
         })
 
-        const numChunks = 2;
-
+        const numChunks = 3;
         console.log(`Creating ${numChunks}x${numChunks} chunks`)
-
-        for (let ix = 0; ix < 1; ix++) {
-            for (let iy = 0; iy < 1; iy++) {
+        for (let ix = 0; ix < numChunks; ix++) {
+            for (let iy = 0; iy < numChunks; iy++) {
                 this.createChunk(ix * 30, 0, iy * 30)
             }
         }
 
+        if(this.headless) {
+            this.setupServerWorld()
+        } else {
+            /*
+            const player = this.player = this.addPed(Player, new Vector3(0, 10, 0))
+            player.controllable = true;
+            this.peds.push(player)
+            */
+        }
+        
+        setInterval(() => {
+            this.update()
+        }, 10);
+
         console.log("all done")
+        console.log(`${this.scene.getPhysicsEngine().getImpostors().length} impostors`)
         //this.scene.getPhysicsEngine().getImpostors().forEach(i => this.physicsViewer.showImpostor(i) );
+    }
+
+    public setupServerWorld() {
+        for (let i = 0; i < 20; i++) {
+            this.addPed(NPC, new Vector3(i, 5, 0))
+        }
+    }
+
+    public addPed<T>(c: typeof Ped, pos: Vector3) {
+        const ped = new c(this.scene)
+        ped.setPosition(pos)
+        this.peds.push(ped)
+        return <T>ped
+    }
+
+    public update() {
+        if(this.player) {
+            this.camera.setPosition(new BABYLON.Vector3(this.player.box.position.x, this.player.box.position.y + 20, this.player.box.position.z));
+            this.camera.target = this.player.box.position
+        }
+
+        this.peds.forEach(ped => ped.update())
+    }
+
+    public createChunk(x: number, y: number, z: number) {
+        const instance = this.buildingContainerPrefab.instantiateModelsToScene()
+        instance.rootNodes[0].position.set(x, y, z)
+        this.makePhysicsObject(instance.rootNodes[0], this.scene, 1)
+
+        const numNpcs = 8
+        console.log(`Creating ${numNpcs} npcs`)
+        for (let i = 0; i < numNpcs; i++) {
+            //const npc = new Player(this.scene)
+            //npc.setPosition(new Vector3(x, y + 10, z))
+
+            /*
+            if(x == 0 && y == 0 && z == 0 && i == 0) {
+                const box = npc.box
+                setInterval(() => {
+                    console.log(`${box.position.x}, ${box.position.y}, ${box.position.z}`)
+                }, 1000);
+            }
+            */
+        }
+
+        const ground = MeshBuilder.CreateGround("ground", {width: 30, height: 30}, this.scene)
+        ground.position.set(x, y, z)
+        ground.physicsImpostor = new BABYLON.PhysicsImpostor(ground, BABYLON.PhysicsImpostor.BoxImpostor, {mass: 0});
     }
 
     private async initScene() {
@@ -165,7 +292,6 @@ export class Game {
                 const scene = this.scene = new Scene(engine)
                 scene.enablePhysics(new Vector3(0, -5, 0), new BABYLON.AmmoJSPlugin(false, ammo))
                 
-    
                 const camera = this.camera = new ArcRotateCamera(
                     "camera",
                     Math.PI / 2,
@@ -175,19 +301,18 @@ export class Game {
                     scene
                 )
                 camera.attachControl(view)
+
+                scene.ambientColor = new BABYLON.Color3(1, 1, 1);
+                //new BABYLON.Color3(1, 1, 1);
+
                 
                 const light = new HemisphericLight(
                     "light",
                     new Vector3(0, 1, 0),
                     scene
                 )
+                light.intensity = 0.7;
                 
-                /*
-                engine.runRenderLoop(() => {
-                    scene.render()
-                })
-                */
-
                 const fps = this.headless ? 10 : 60;
 
                 scene.getPhysicsEngine().setTimeStep(1/fps);
@@ -202,8 +327,6 @@ export class Game {
                     scene.debugLayer.show()
                     this.physicsViewer = new BABYLON.Debug.PhysicsViewer(scene);
                 }
-
-                
 
                 resolve()
             })
