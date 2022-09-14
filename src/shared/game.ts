@@ -29,6 +29,8 @@ class Player {
                 box.physicsImpostor.setLinearVelocity(new Vector3())
                 box.physicsImpostor.setAngularVelocity(new Vector3())
             }
+
+            
         }, 500)
     }
 
@@ -107,9 +109,20 @@ export class Game {
         instance.rootNodes[0].position.set(x, y, z)
         this.makePhysicsObject(instance.rootNodes[0], this.scene, 1)
 
-        for (let i = 0; i < 3; i++) {
+        const numNpcs = 8
+
+        console.log(`Creating ${numNpcs} npcs`)
+
+        for (let i = 0; i < 30; i++) {
             const npc = new Player(this.scene)
             npc.setPosition(new Vector3(x, y + 10, z))
+
+            if(x == 0 && y == 0 && z == 0 && i == 0) {
+                const box = npc.box
+                setInterval(() => {
+                    console.log(`${box.position.x}, ${box.position.y}, ${box.position.z}`)
+                }, 1000);
+            }
         }
 
         const ground = MeshBuilder.CreateGround("ground", {width: 30, height: 30}, this.scene)
@@ -130,8 +143,12 @@ export class Game {
             })
         })
 
-        for (let ix = 0; ix < 4; ix++) {
-            for (let iy = 0; iy < 4; iy++) {
+        const numChunks = 2;
+
+        console.log(`Creating ${numChunks}x${numChunks} chunks`)
+
+        for (let ix = 0; ix < 1; ix++) {
+            for (let iy = 0; iy < 1; iy++) {
                 this.createChunk(ix * 30, 0, iy * 30)
             }
         }
@@ -146,8 +163,8 @@ export class Game {
                 const view = this.headless ? undefined : document.getElementById("view") as HTMLCanvasElement
                 const engine = view ? new Engine(view, true) : new BABYLON.NullEngine();
                 const scene = this.scene = new Scene(engine)
-                scene.enablePhysics(new Vector3(0, -5, 0), new BABYLON.AmmoJSPlugin(true, ammo))
-                scene.getPhysicsEngine().setTimeStep(1/150);
+                scene.enablePhysics(new Vector3(0, -5, 0), new BABYLON.AmmoJSPlugin(false, ammo))
+                
     
                 const camera = this.camera = new ArcRotateCamera(
                     "camera",
@@ -165,14 +182,28 @@ export class Game {
                     scene
                 )
                 
+                /*
+                engine.runRenderLoop(() => {
+                    scene.render()
+                })
+                */
+
+                const fps = this.headless ? 10 : 60;
+
+                scene.getPhysicsEngine().setTimeStep(1/fps);
+                setInterval(() => {
+                    scene.render()
+                }, 1000 / fps)
+
+                console.log(`Runnig at ${fps} fps, ${1000/fps}ms interval, ${1/fps}ms timestep`)
+
                 if(!this.headless){
-                    engine.runRenderLoop(() => {
-                        scene.render()
-                    })
+                    
                     scene.debugLayer.show()
+                    this.physicsViewer = new BABYLON.Debug.PhysicsViewer(scene);
                 }
 
-                this.physicsViewer = new BABYLON.Debug.PhysicsViewer(scene);
+                
 
                 resolve()
             })
