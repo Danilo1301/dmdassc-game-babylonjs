@@ -9,7 +9,7 @@ const setEnvDefault = (key: string, val: any) => {
 };
 
 setEnvDefault('DEBUG', 'app:*');
-setEnvDefault('NODE_ENV', 'development');
+setEnvDefault('NODE_ENV', 'production');
 setEnvDefault('PORT', process.env.PORT || 3000);
 setEnvDefault('HOST', 'localhost');
 setEnvDefault('IS_SERVER', true);
