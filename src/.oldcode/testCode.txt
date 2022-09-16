@@ -1,0 +1,106 @@
+ // grounds
+                let ground1 = MeshBuilder.CreateGround("ground", {width: 50, height: 50}, scene);
+                //ground1.material = material
+                ground1.position.y = -3.1;
+                ground1.position.x = 25;
+                ground1.position.z = 25;
+                ground1.rotation.z = 0.1;
+                ground1.rotation.x = -0.1;
+                
+                let ground2 = MeshBuilder.CreateGround("ground", {width: 50, height: 50}, scene);
+                ground2.position.y = -3.1;
+                ground2.position.x = -25;
+                ground2.position.z = 25;
+                ground2.rotation.z = -0.1;
+                ground2.rotation.x = -0.1;
+                
+                let ground3 = MeshBuilder.CreateGround("ground", {width: 50, height: 50}, scene);
+                ground3.position.y = -3.1;
+                ground3.position.x = 25;
+                ground3.position.z = -25;
+                ground3.rotation.z = 0.1;
+                ground3.rotation.x = 0.1;
+                
+                let ground4 = MeshBuilder.CreateGround("ground", {width: 50, height: 50}, scene);
+                ground4.position.y = -3.1;
+                ground4.position.x = -25;
+                ground4.position.z = -25;
+                ground4.rotation.z = -0.1;
+                ground4.rotation.x = 0.1;
+    
+                //
+                [ground1, ground2, ground3, ground4].forEach(ground => {
+                    ground.physicsImpostor = new BABYLON.PhysicsImpostor(ground, BABYLON.PhysicsImpostor.BoxImpostor, {mass: 0});
+                });
+
+                
+            
+                function rand() {
+                    let sign = Math.random() < 0.5;
+                    return Math.random() * (sign ? 1 : -1);
+                }
+                
+                function ballPosition(ball) {
+                    ball.position.y = -2;
+                    ball.position.x = rand() * 20;
+                    ball.position.z = rand() * 20;
+                }
+                
+                let ball = MeshBuilder.CreateBox("ball", {}, scene);
+                ballPosition(ball);
+                let balls = [ball];
+                
+                for(let i = 0; i < 40; ++i) {
+                    let b = ball.clone("ball" + i);
+                    ballPosition(b)
+                    balls.push(b);
+                }
+                
+                balls.forEach(ball => {
+                    ball.physicsImpostor = new BABYLON.PhysicsImpostor(ball, BABYLON.PhysicsImpostor.BoxImpostor, {mass: 1});
+                });
+                //
+    
+
+     //const material =  new SampleMaterial("material", scene)
+
+
+
+public makePhysicsObject(newMeshes, scene, scaling){
+        const game = this;
+
+        // Create physics root and position it to be the center of mass for the imported mesh
+        var physicsRoot = new BABYLON.Mesh("physicsRoot", scene);
+        //physicsRoot.position.y -= 0.9;
+
+        // For all children labeled box (representing colliders), make them invisible and add them as a child of the root object
+        newMeshes.forEach((m, i)=>{
+            if(m.name.indexOf("col") != -1){
+                //m.isVisible = false
+                //physicsRoot.addChild(m)
+            }
+        })
+
+        // Add all root nodes within the loaded gltf to the physics root
+        newMeshes.forEach((m, i)=>{
+            if(m.parent == null){
+                //physicsRoot.addChild(m)
+            }
+        })
+
+        // Make every collider into a physics impostor
+        physicsRoot.meshes.forEach((m)=>{
+            if(m.name.indexOf("col") != -1){
+                m.scaling.x = Math.abs(m.scaling.x)
+                m.scaling.y = Math.abs(m.scaling.y)
+                m.scaling.z = Math.abs(m.scaling.z)
+                m.physicsImpostor = new BABYLON.PhysicsImpostor(m, BABYLON.PhysicsImpostor.BoxImpostor, { mass: 0.1 }, scene);
+            }
+        })
+        
+        // Scale the root object and turn it into a physics impsotor
+        physicsRoot.scaling.scaleInPlace(scaling)
+        physicsRoot.physicsImpostor = new BABYLON.PhysicsImpostor(physicsRoot, BABYLON.PhysicsImpostor.NoImpostor, { mass: 0 }, scene);
+        
+        return physicsRoot
+    }
